@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { Brand } from '@/components/site/brand'
-import { buttonVariants } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { UserMenu } from '@/components/site/user-menu'
 
 export function SiteHeader() {
   return (
@@ -21,15 +20,7 @@ export function SiteHeader() {
           </Link>
         </nav>
 
-        <Link
-          href="/#regioes"
-          className={cn(
-            buttonVariants({ size: 'lg' }),
-            'h-10 px-5 bg-primary text-primary-foreground hover:bg-primary/90',
-          )}
-        >
-          Votar agora
-        </Link>
+        <UserMenu />
       </div>
     </header>
   )

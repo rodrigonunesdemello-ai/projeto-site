@@ -77,7 +77,7 @@ export default async function RegionPage({ params }: { params: Promise<{ id: str
         </section>
 
         <PrizeCard />
-        <VotingSection regionId={region.id} categories={region.categories} />
+        <VotingSection regionUuid={region.uuid} categories={region.categories} />
       </main>
 
       <SiteFooter />

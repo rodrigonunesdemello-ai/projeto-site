@@ -1,3 +1,13 @@
+export type Region = {
+  id: string
+  uuid: string
+  name: string
+  slug: string
+  tagline: string
+  image: string
+  description?: string
+}
+
 export type Nominee = {
   id: string
   name: string
@@ -7,47 +17,43 @@ export type Nominee = {
 
 export type Category = {
   id: string
+  uuid: string
   name: string
   description: string
   nominees: Nominee[]
 }
 
-export type Region = {
-  id: string
-  name: string
-  slug: string
-  tagline: string
-  image: string
-  description?: string
+export type RegionWithCategories = Region & {
+  categories: Category[]
 }
 
 export type Prize = {
-  title: string
   edition: string
-  banner: string
+  title: string
   description: string
+  banner: string
   highlights: { label: string; value: string }[]
   sponsor: {
     name: string
-    logo: string
     role: string
+    logo: string
   }
 }
 
 export const prize: Prize = {
-  title: 'Troféu Síntese de Ouro',
-  edition: 'Grande Prêmio — Edição 2026',
-  banner: '/prize-banner.png',
+  edition: 'Edição 2026',
+  title: 'Grande Prêmio Síntese 2026',
   description:
-    'O grande vencedor de cada categoria recebe o cobiçado Troféu Síntese de Ouro, além de um pacote de visibilidade premium com produção de conteúdo profissional, campanha de mídia na região e um final de semana de luxo à beira-mar. Cada voto registrado também habilita o eleitor a concorrer a prêmios exclusivos no sorteio oficial da plataforma.',
+    'O Grande Prêmio Síntese celebra os talentos que fazem a Baixada Santista brilhar. Ao votar, você concorre a prêmios exclusivos e ajuda a transformar vidas na sua região.',
+  banner: '/placeholder.svg',
   highlights: [
-    { label: 'Troféu', value: 'Peça exclusiva banhada a ouro' },
-    { label: 'Visibilidade', value: 'Campanha de mídia regional' },
-    { label: 'Experiência', value: 'Fim de semana de luxo' },
+    { label: 'Sorteio', value: '01/12/2026' },
+    { label: 'Premiação', value: 'R$ 50.000 em prêmios' },
+    { label: 'Participação', value: '6 regiões, 5 categorias' },
   ],
   sponsor: {
-    name: 'Litoral Prime',
-    logo: '/sponsor-litoral.png',
-    role: 'Patrocinador Oficial',
+    name: 'Síntese',
+    role: 'Realização',
+    logo: '/placeholder.svg',
   },
 }
