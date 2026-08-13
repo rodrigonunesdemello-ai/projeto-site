@@ -2,41 +2,92 @@
 
 import { useMemo, useState } from 'react'
 import Image from 'next/image'
-import { Check, Trophy } from 'lucide-react'
+import { Check, Loader as Loader2, Trophy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { Category } from '@/lib/data'
-import { LeadModal, type LeadData } from '@/components/regiao/lead-modal'
+import { LeadModal } from '@/components/regiao/lead-modal'
+import { createClient } from '@/lib/supabase/client'
 
 type Target = { categoryId: string; nomineeId: string; nomineeName: string }
 
-export function VotingSection({ categories }: { categories: Category[] }) {
+type VoteResult = {
+  success: boolean
+  vote_id?: string
+  code?: string
+  message?: string
+}
+
+export function VotingSection({
+  regionId,
+  categories,
+}: {
+  regionId: string
+  categories: Category[]
+}) {
   const [activeId, setActiveId] = useState(categories[0]?.id ?? '')
   const [modalTarget, setModalTarget] = useState<Target | null>(null)
-  const [hasLead, setHasLead] = useState(false)
-  // Votos por categoria: categoryId -> nomineeId
+  const [voterId, setVoterId] = useState<string | null>(null)
   const [votes, setVotes] = useState<Record<string, string>>({})
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const active = useMemo(
     () => categories.find((c) => c.id === activeId) ?? categories[0],
     [categories, activeId],
   )
 
+  async function castVote(target: Target, vid: string) {
+    setSubmitting(true)
+    setError(null)
+
+    try {
+      const supabase = createClient()
+      const { data, error: rpcError } = await supabase.rpc('register_vote', {
+        p_voter_id: vid,
+        p_region_id: regionId,
+        p_category_id: target.categoryId,
+        p_nominee_id: target.nomineeId,
+      })
+
+      if (rpcError) {
+        setError('Não foi possível registrar o voto. Tente novamente.')
+        return
+      }
+
+      const result = data as VoteResult
+      if (result?.success) {
+        setVotes((v) => ({ ...v, [target.categoryId]: target.nomineeId }))
+      } else if (result?.code === 'ALREADY_VOTED') {
+        setVotes((v) => ({ ...v, [target.categoryId]: target.nomineeId }))
+        setError(result.message ?? 'Você já votou nesta categoria.')
+      } else {
+        setError(result?.message ?? 'Não foi possível registrar o voto.')
+      }
+    } catch {
+      setError('Não foi possível registrar o voto. Tente novamente.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   function requestVote(categoryId: string, nomineeId: string, nomineeName: string) {
-    if (votes[categoryId] === nomineeId) return
-    if (hasLead) {
-      setVotes((v) => ({ ...v, [categoryId]: nomineeId }))
+    if (votes[categoryId] === nomineeId || submitting) return
+    setError(null)
+
+    if (voterId) {
+      castVote({ categoryId, nomineeId, nomineeName }, voterId)
       return
     }
     setModalTarget({ categoryId, nomineeId, nomineeName })
   }
 
-  function confirmLead(_data: LeadData) {
-    if (modalTarget) {
-      setVotes((v) => ({ ...v, [modalTarget.categoryId]: modalTarget.nomineeId }))
-    }
-    setHasLead(true)
+  function handleVoterConfirmed(vid: string) {
+    setVoterId(vid)
     setModalTarget(null)
+    if (modalTarget) {
+      castVote(modalTarget, vid)
+    }
   }
 
   if (!active) return null
@@ -51,7 +102,6 @@ export function VotingSection({ categories }: { categories: Category[] }) {
         <div className="mt-4 h-px w-24 bg-gradient-to-r from-transparent via-primary to-transparent" />
       </div>
 
-      {/* Seletor de categorias */}
       <div className="mb-10 flex flex-wrap justify-center gap-2.5">
         {categories.map((c) => (
           <button
@@ -75,10 +125,14 @@ export function VotingSection({ categories }: { categories: Category[] }) {
         {active.description}
       </p>
 
-      {/* Grid de concorrentes */}
+      {error && (
+        <p className="mx-auto mb-6 max-w-md text-center text-sm text-destructive">{error}</p>
+      )}
+
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {active.nominees.map((n) => {
           const voted = votes[active.id] === n.id
+          const isSubmittingThis = submitting && modalTarget?.nomineeId === n.id
           return (
             <div
               key={n.id}
@@ -111,14 +165,14 @@ export function VotingSection({ categories }: { categories: Category[] }) {
 
                 <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Trophy className="size-3.5 text-primary" />
-                  {(n.votes + (voted ? 1 : 0)).toLocaleString('pt-BR')} votos
+                  Votação aberta
                 </div>
 
                 <Button
                   type="button"
                   size="lg"
                   onClick={() => requestVote(active.id, n.id, n.name)}
-                  disabled={voted}
+                  disabled={voted || submitting}
                   className={cn(
                     'mt-4 h-10 w-full',
                     voted
@@ -126,7 +180,15 @@ export function VotingSection({ categories }: { categories: Category[] }) {
                       : 'bg-primary text-primary-foreground hover:bg-primary/90',
                   )}
                 >
-                  {voted ? 'Voto confirmado' : 'Votar'}
+                  {isSubmittingThis ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" /> Registrando...
+                    </>
+                  ) : voted ? (
+                    'Voto confirmado'
+                  ) : (
+                    'Votar'
+                  )}
                 </Button>
               </div>
             </div>
@@ -135,10 +197,10 @@ export function VotingSection({ categories }: { categories: Category[] }) {
       </div>
 
       <LeadModal
-        open={Boolean(modalTarget)}
+        open={Boolean(modalTarget) && !voterId}
         nomineeName={modalTarget?.nomineeName}
         onClose={() => setModalTarget(null)}
-        onConfirm={confirmLead}
+        onConfirm={handleVoterConfirmed}
       />
     </section>
   )

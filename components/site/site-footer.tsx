@@ -1,34 +1,27 @@
 import Link from 'next/link'
-import { Brand } from '@/components/site/brand'
+import { Trophy } from 'lucide-react'
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border/60 bg-card/30">
-      <div className="mx-auto flex max-w-6xl flex-col items-center gap-8 px-4 py-12 text-center md:px-6">
-        <Brand size="md" href="/" />
-
-        <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
-
-        <p className="max-w-md text-pretty text-sm leading-relaxed text-muted-foreground">
-          Celebrando os talentos que representam cada cidade da Baixada Santista. Cada voto
-          transforma reconhecimento em impacto social.
-        </p>
-
-        <nav className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-          <Link href="/#regioes" className="transition-colors hover:text-foreground">
-            Regiões
+    <footer className="border-t border-border/40 bg-background">
+      <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
+        <div className="flex flex-col items-center gap-6 text-center">
+          <Link href="/" className="flex items-center gap-2.5">
+            <span className="flex size-8 items-center justify-center rounded-lg bg-primary/15">
+              <Trophy className="size-4 text-primary" />
+            </span>
+            <span className="font-serif text-base font-semibold tracking-wide text-metal-silver">
+              SÍNTESE<span className="text-primary"> 2026</span>
+            </span>
           </Link>
-          <Link href="/#premios" className="transition-colors hover:text-foreground">
-            Prêmios
-          </Link>
-          <Link href="/#impacto" className="transition-colors hover:text-foreground">
-            Impacto social
-          </Link>
-        </nav>
-
-        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground/70">
-          © {new Date().getFullYear()} Síntese · Todos os direitos reservados
-        </p>
+          <p className="max-w-md text-sm text-muted-foreground">
+            O maior prêmio do litoral paulista. Reconhecendo quem faz a diferença
+            na Baixada Santista.
+          </p>
+          <p className="text-xs text-muted-foreground/60">
+            © 2026 Síntese. Todos os direitos reservados.
+          </p>
+        </div>
       </div>
     </footer>
   )
