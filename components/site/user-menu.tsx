@@ -22,10 +22,9 @@ export function UserMenu() {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user: u } }) => {
       if (u) {
-        const meta = (u.user_metadata ?? {}) as Record<string, string>
         setUser({
           email: u.email ?? '',
-          name: meta.full_name || meta.name || u.email || '',
+          name: (u.user_metadata?.full_name as string) || (u.user_metadata?.name as string) || u.email ?? '',
         })
       }
       setLoading(false)
@@ -33,10 +32,9 @@ export function UserMenu() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        const meta = (session.user.user_metadata ?? {}) as Record<string, string>
         setUser({
           email: session.user.email ?? '',
-          name: meta.full_name || meta.name || session.user.email || '',
+          name: (session.user.user_metadata?.full_name as string) || (session.user.user_metadata?.name as string) || session.user.email ?? '',
         })
       } else {
         setUser(null)

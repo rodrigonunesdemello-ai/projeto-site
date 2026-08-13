@@ -32,7 +32,6 @@ export async function getRegions(): Promise<Region[]> {
 
   return (data as RegionRow[]).map((r) => ({
     id: r.slug,
-    uuid: r.id,
     name: r.name,
     slug: r.slug,
     tagline: r.tagline ?? '',
@@ -93,7 +92,6 @@ export async function getRegionBySlug(
     description: string | null
   }>).map((c) => ({
     id: c.id,
-    uuid: c.id,
     name: c.name,
     description: c.description ?? '',
     nominees: nomineesByCategory.get(c.id) ?? [],
@@ -101,7 +99,6 @@ export async function getRegionBySlug(
 
   return {
     id: region.slug,
-    uuid: region.id,
     name: region.name,
     slug: region.slug,
     tagline: region.tagline ?? '',
