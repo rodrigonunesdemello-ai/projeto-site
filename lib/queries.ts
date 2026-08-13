@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import type { Region, RegionWithCategories, Category, Nominee } from '@/lib/data'
+import type { Category, Nominee, Region } from '@/lib/data'
+
+export type RegionWithCategories = Region & { categories: Category[] }
 
 type RegionRow = {
   id: string
@@ -8,13 +10,6 @@ type RegionRow = {
   tagline: string | null
   description: string | null
   image_url: string | null
-}
-
-type CategoryRow = {
-  id: string
-  name: string
-  slug: string
-  description: string | null
 }
 
 type NomineeRow = {
@@ -26,18 +21,17 @@ type NomineeRow = {
 }
 
 export async function getRegions(): Promise<Region[]> {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from('regions')
     .select('id, name, slug, tagline, description, image_url')
     .eq('active', true)
-    .order('created_at', { ascending: true })
+    .order('name')
 
   if (error || !data) return []
 
   return (data as RegionRow[]).map((r) => ({
     id: r.slug,
-    uuid: r.id,
     name: r.name,
     slug: r.slug,
     tagline: r.tagline ?? '',
@@ -46,63 +40,70 @@ export async function getRegions(): Promise<Region[]> {
   }))
 }
 
-export async function getRegionBySlug(slug: string): Promise<RegionWithCategories | null> {
-  const supabase = createClient()
+export async function getRegionBySlug(
+  slug: string,
+): Promise<RegionWithCategories | null> {
+  const supabase = await createClient()
 
-  const { data: region, error: regionError } = await supabase
+  const { data: regionData, error: regionError } = await supabase
     .from('regions')
     .select('id, name, slug, tagline, description, image_url')
     .eq('slug', slug)
     .eq('active', true)
     .maybeSingle()
 
-  if (regionError || !region) return null
+  if (regionError || !regionData) return null
 
-  const r = region as RegionRow
+  const region = regionData as RegionRow
+  const regionUuid = region.id
 
-  const { data: categories, error: catError } = await supabase
+  const { data: categoriesData, error: categoriesError } = await supabase
     .from('categories')
     .select('id, name, slug, description')
     .eq('active', true)
-    .order('created_at', { ascending: true })
+    .order('name')
 
-  if (catError || !categories) return null
+  if (categoriesError || !categoriesData) return null
 
-  const { data: nominees, error: nomError } = await supabase
+  const { data: nomineesData, error: nomineesError } = await supabase
     .from('nominees')
     .select('id, name, instagram, image_url, category_id')
-    .eq('region_id', r.id)
+    .eq('region_id', regionUuid)
     .eq('active', true)
-    .order('name', { ascending: true })
 
-  if (nomError || !nominees) return null
+  if (nomineesError || !nomineesData) return null
 
-  const nomRows = nominees as NomineeRow[]
+  const nomineesByCategory = new Map<string, Nominee[]>()
+  for (const n of nomineesData as NomineeRow[]) {
+    const list = nomineesByCategory.get(n.category_id) ?? []
+    list.push({
+      id: n.id,
+      name: n.name,
+      handle: n.instagram ?? '',
+      image: n.image_url ?? '/placeholder.svg',
+    })
+    nomineesByCategory.set(n.category_id, list)
+  }
 
-  const cats: Category[] = (categories as CategoryRow[]).map((c) => ({
-    id: c.slug,
-    uuid: c.id,
+  const categories: Category[] = (categoriesData as Array<{
+    id: string
+    name: string
+    slug: string
+    description: string | null
+  }>).map((c) => ({
+    id: c.id,
     name: c.name,
-    slug: c.slug,
     description: c.description ?? '',
-    nominees: nomRows
-      .filter((n) => n.category_id === c.id)
-      .map((n) => ({
-        id: n.id,
-        name: n.name,
-        handle: n.instagram ?? '',
-        image: n.image_url ?? '/placeholder.svg',
-      })),
+    nominees: nomineesByCategory.get(c.id) ?? [],
   }))
 
   return {
-    id: r.slug,
-    uuid: r.id,
-    name: r.name,
-    slug: r.slug,
-    tagline: r.tagline ?? '',
-    image: r.image_url ?? '/placeholder.svg',
-    description: r.description ?? undefined,
-    categories: cats,
+    id: region.slug,
+    name: region.name,
+    slug: region.slug,
+    tagline: region.tagline ?? '',
+    image: region.image_url ?? '/placeholder.svg',
+    description: region.description ?? undefined,
+    categories,
   }
 }

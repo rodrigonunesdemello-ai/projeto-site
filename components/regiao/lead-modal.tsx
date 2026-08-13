@@ -1,10 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { X, ShieldCheck, Loader as Loader2 } from 'lucide-react'
+import { X, ShieldCheck, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { createClient } from '@/lib/supabase/client'
 
 export type LeadData = {
   nome: string
@@ -39,12 +38,11 @@ export function LeadModal({
   open: boolean
   nomineeName?: string
   onClose: () => void
-  onConfirm: (voterId: string) => void
+  onConfirm: (data: LeadData) => void
 }) {
   const [data, setData] = useState<LeadData>(empty)
   const [errors, setErrors] = useState<Partial<Record<keyof LeadData, string>>>({})
   const [submitting, setSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -73,35 +71,17 @@ export function LeadModal({
     return Object.keys(next).length === 0
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!validate()) return
     setSubmitting(true)
-    setSubmitError(null)
-
-    try {
-      const supabase = createClient()
-      const { data: result, error } = await supabase.rpc('register_voter', {
-        p_name: data.nome.trim(),
-        p_whatsapp: data.whatsapp.trim(),
-        p_phone: data.telefone.trim(),
-        p_address: data.endereco.trim(),
-      })
-
-      if (error || !result) {
-        setSubmitError('Não foi possível registrar seus dados. Tente novamente.')
-        setSubmitting(false)
-        return
-      }
-
-      onConfirm(result as string)
+    // Simula o registro do lead antes de liberar o voto.
+    setTimeout(() => {
+      setSubmitting(false)
+      onConfirm(data)
       setData(empty)
       setErrors({})
-    } catch {
-      setSubmitError('Não foi possível registrar seus dados. Tente novamente.')
-    } finally {
-      setSubmitting(false)
-    }
+    }, 700)
   }
 
   return (
@@ -111,6 +91,7 @@ export function LeadModal({
       aria-modal="true"
       aria-labelledby="lead-modal-title"
     >
+      {/* Overlay */}
       <button
         type="button"
         aria-label="Fechar"
@@ -119,6 +100,7 @@ export function LeadModal({
       />
 
       <div className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-primary/25 bg-card shadow-2xl shadow-primary/10">
+        {/* Faixa dourada superior */}
         <div className="h-1 w-full bg-gradient-to-r from-transparent via-primary to-transparent" />
 
         <div className="p-6 md:p-7">
@@ -168,8 +150,6 @@ export function LeadModal({
                 {errors[f.key] && <span className="text-xs text-destructive">{errors[f.key]}</span>}
               </div>
             ))}
-
-            {submitError && <span className="text-xs text-destructive">{submitError}</span>}
 
             <Button
               type="submit"
