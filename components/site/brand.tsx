@@ -25,7 +25,7 @@ export function Brand({ size = 'md', href, className }: BrandProps) {
           <span className="absolute inset-0 -z-10 rounded-full bg-primary/20 blur-2xl" />
         )}
         <Image
-          src="/sintese-logo.png"
+          src="/sintese-logo.svg"
           alt="Logotipo Síntese"
           width={s.img}
           height={s.img}
