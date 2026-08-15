@@ -3,13 +3,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Check, Trophy, Loader as Loader2 } from 'lucide-react'
+import { Check, Trophy, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { Category } from '@/lib/data'
-
-type Target = { categoryId: string; nomineeId: string; nomineeName: string }
 
 type AuthState = {
   checked: boolean
@@ -27,7 +25,6 @@ export function VotingSection({
 }) {
   const router = useRouter()
   const [activeId, setActiveId] = useState(categories[0]?.id ?? '')
-  const [modalTarget, setModalTarget] = useState<Target | null>(null)
   const [votes, setVotes] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
   const [voteError, setVoteError] = useState('')

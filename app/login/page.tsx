@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { SiteHeader } from '@/components/site/site-header'
 import { SiteFooter } from '@/components/site/site-footer'
 import { Brand } from '@/components/site/brand'
-import { Loader as Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 function LoginContent() {
   const searchParams = useSearchParams()

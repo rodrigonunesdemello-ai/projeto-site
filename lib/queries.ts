@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createStaticClient } from '@/lib/supabase/static'
 import type { Category, Nominee, Region } from '@/lib/data'
 
 export type RegionWithCategories = Region & { categories: Category[] }
@@ -21,7 +21,7 @@ type NomineeRow = {
 }
 
 export async function getRegions(): Promise<Region[]> {
-  const supabase = await createClient()
+  const supabase = createStaticClient()
   const { data, error } = await supabase
     .from('regions')
     .select('id, name, slug, tagline, description, image_url')
@@ -32,6 +32,7 @@ export async function getRegions(): Promise<Region[]> {
 
   return (data as RegionRow[]).map((r) => ({
     id: r.slug,
+    uuid: r.id,
     name: r.name,
     slug: r.slug,
     tagline: r.tagline ?? '',
@@ -43,7 +44,7 @@ export async function getRegions(): Promise<Region[]> {
 export async function getRegionBySlug(
   slug: string,
 ): Promise<RegionWithCategories | null> {
-  const supabase = await createClient()
+  const supabase = createStaticClient()
 
   const { data: regionData, error: regionError } = await supabase
     .from('regions')
@@ -92,6 +93,7 @@ export async function getRegionBySlug(
     description: string | null
   }>).map((c) => ({
     id: c.id,
+    uuid: c.id,
     name: c.name,
     description: c.description ?? '',
     nominees: nomineesByCategory.get(c.id) ?? [],
@@ -99,6 +101,7 @@ export async function getRegionBySlug(
 
   return {
     id: region.slug,
+    uuid: region.id,
     name: region.name,
     slug: region.slug,
     tagline: region.tagline ?? '',
