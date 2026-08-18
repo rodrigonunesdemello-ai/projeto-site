@@ -5,6 +5,8 @@ import { RegionCard } from '@/components/site/region-card'
 import { Brand } from '@/components/site/brand'
 import { getRegions } from '@/lib/queries'
 
+export const dynamic = 'force-dynamic'
+
 export default async function HomePage() {
   const regions = await getRegions()
 

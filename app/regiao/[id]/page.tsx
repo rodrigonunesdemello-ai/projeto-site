@@ -7,11 +7,12 @@ import { SiteHeader } from '@/components/site/site-header'
 import { SiteFooter } from '@/components/site/site-footer'
 import { PrizeCard } from '@/components/regiao/prize-card'
 import { VotingSection } from '@/components/regiao/voting-section'
-import { getRegionBySlug, getRegions } from '@/lib/queries'
+import { getRegionBySlug } from '@/lib/queries'
+
+export const dynamic = 'force-dynamic'
 
 export async function generateStaticParams() {
-  const regions = await getRegions()
-  return regions.map((region) => ({ id: region.slug }))
+  return []
 }
 
 export async function generateMetadata({
